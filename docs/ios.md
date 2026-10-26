@@ -115,10 +115,15 @@ Simulator build.
 
 ## Touch adaptation
 
-The adaptation is deliberately minimal: the desktop UI at the desktop aspect,
-letterboxed and vertically centred in the one fixed full-screen window
-(`NativeEditor::fitRoot`; there is no resize, no persisted scale), with only
-the touch-ups a finger needs. Three gates, from narrowest reach to widest:
+The adaptation is deliberately minimal: the desktop UI filling the one fixed
+full-screen window (`NativeEditor::fitRoot`; there is no resize, no persisted
+size), with only the touch-ups a finger needs. The screen's width sets the
+scale and its extra height over the design's 1024:578 stretches the content
+column between header and faceplate (about 90 design px on a 4:3 iPad), where
+the signal chain's lanes and the block card centre below their titles and the
+tone browser, Settings and tuner fill the room; see `plugin/docs/native-ui.md`
+§5.1. Three
+gates, from narrowest reach to widest:
 
 - `design::kIos`: the app shell only. The fixed window, the Bluetooth
   sample-rate tip (`Banners.cpp`), and the multi-select file picker that
@@ -224,11 +229,33 @@ picker instead (see Known gaps).
   `Library/TONE3000/Presets/Factory` inside the app container still overrides a
   bundled entry in `list()`. The glob runs at configure time, so a
   new preset file needs a reconfigure.
-- **Sign-in uses the system browser and a loopback redirect**, the same as
-  desktop (`plugin/docs/native-ui.md` §5.14). The app declares background
-  audio, so the process and its listener socket stay alive while Safari is
-  in front, and the redirect to `http://localhost:<port>/` lands back in the
-  app.
+- **Sign-in runs in an in-app sheet, not Safari.** App Store review
+  rejected the hand-off to the system browser (Guideline 4, Design: "the
+  user is taken to the default web browser to sign in"), and Apple's answer
+  for OAuth is `ASWebAuthenticationSession`: a Safari sheet presented over
+  the app with the page's address and certificate visible, Safari's cookies
+  shared (an existing tone3000.com login is one tap; the system asks once,
+  "TONE3000 wants to use tone3000.com to sign in", before the sheet) and a
+  Cancel button. `plugin/ui/services/WebAuth.mm` is the shim
+  (header-only no-op off iOS, compiled with `-fobjc-arc` on iOS by
+  `NativeUi.cmake`), and `Tone3000Session::openBrowser` uses it in place of
+  `launchInDefaultBrowser`. Everything else is the desktop flow
+  (`plugin/docs/native-ui.md` §5.14): the sheet is a browser, so it follows
+  the redirect to `http://localhost:<port>/` like Safari did, the loopback
+  listener takes the code, and the session dismisses the sheet. The server
+  sees the same `redirect_uri`, so nothing new is registered for the
+  publishable key and no custom URL scheme is declared. Cancel on the sheet
+  (or on the consent alert) abandons the sign-in like the server's
+  `canceled=true` redirect does; a sheet the system refuses to present
+  leaves the sign-in page up with its Copy Link and device-flow fallbacks.
+  The app no longer leaves the foreground to sign in, so the listener no
+  longer depends on background audio for this.
+- **Account deletion.** The same rejection notes that an app offering
+  account creation must also offer account deletion in the app (Guideline
+  5.1.1(v)). The sign-in sheet reaches tone3000.com's own register page, so
+  expect review to look for a deletion path too; today there is none in
+  the plugin, and adding one needs an API endpoint (or at least a deep link
+  to the account page) on the TONE3000 side first.
 
 ## Known gaps
 
