@@ -180,7 +180,7 @@ private:
         auto row = std::make_unique<Row>(option, option.mode == mode);
         row->onClick = [this, onPick, m = option.mode, name = option.label] {
           close();
-          help::announce("Input Mode: " + name);
+          help::announce(juce::String("Input Mode: ") + name);
           onPick(m);
         };
         addAndMakeVisible(*row);

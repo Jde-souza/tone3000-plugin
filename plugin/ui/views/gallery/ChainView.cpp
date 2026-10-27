@@ -463,7 +463,7 @@ bool ChainView::tileKey(GalleryTile& tile, const juce::KeyPress& key) {
   if (key == juce::KeyPress::leftKey || key == juce::KeyPress::rightKey) {
     const int nextIdx = index + (key == juce::KeyPress::leftKey ? -1 : 1);
     moveActiveTo(*side, nextIdx);
-    help::announce("Slot " + juce::String(juce::jlimit(0, static_cast<int>(lane(*side).tiles().size()) - 1, nextIdx) + 1));
+    help::announce("Slot " + juce::String(juce::jlimit(0, static_cast<int>(lane(*side).items().size()) - 1, nextIdx) + 1));
   } else if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey) {
     if (!stereo()) return false;
     const auto other = *side == ChainSide::left ? ChainSide::right : ChainSide::left;

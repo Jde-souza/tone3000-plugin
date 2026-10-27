@@ -19,11 +19,6 @@ public:
                                                                           [&button] { button.triggerClick(); })),
         button_(button) {}
 
-  juce::AccessibilityRole getRole() const override {
-    return button_.isToggleable() ? juce::AccessibilityRole::toggleButton
-                                  : juce::AccessibilityRole::button;
-  }
-
   juce::String getTitle() const override { return button_.accessibleName(); }
   juce::String getHelp() const override { return button_.getHelpText(); }
   juce::String getDescription() const override {
@@ -64,7 +59,7 @@ void Clickable::clicked() {
 
 void Clickable::notifyStateChanged() {
   if (auto* handler = getAccessibilityHandler())
-    handler->notifyAccessibilityEvent(juce::AccessibilityEvent::stateChanged);
+    handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
 }
 
 // The button's own handler runs before the viewport's listeners, so on the

@@ -940,6 +940,33 @@ void AccessibilityHandler::postAnnouncement (const String& announcementString, A
     endif()
 endif()
 
+# T3K_A11Y_PUBLIC_ACTIVE: expose areAnyAccessibilityClientsActive() publicly
+# so views (e.g. PluginRoot) can adapt keyboard focus policies when a screen
+# reader or accessibility client is listening.
+set(_juce_a11y_h "${LIB_DIR}/juce/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h")
+if (EXISTS "${_juce_a11y_h}")
+    file(READ "${_juce_a11y_h}" _juce_a11y_h_src)
+    if (NOT _juce_a11y_h_src MATCHES "T3K_A11Y_PUBLIC_ACTIVE")
+        if (_juce_a11y_h_src MATCHES "\r\n")
+            set(_juce_nl "\r\n")
+        else()
+            set(_juce_nl "\n")
+        endif()
+        set(_juce_a11y_active_old "static bool areAnyAccessibilityClientsActive();${_juce_nl}")
+        set(_juce_a11y_priv_old "private:${_juce_nl}")
+        set(_juce_a11y_priv_new "// T3K_A11Y_PUBLIC_ACTIVE: public accessibility client query${_juce_nl}    static bool areAnyAccessibilityClientsActive();${_juce_nl}${_juce_nl}private:${_juce_nl}")
+        string(REPLACE "${_juce_a11y_active_old}" "" _juce_a11y_h_src "${_juce_a11y_h_src}")
+        string(REPLACE "${_juce_a11y_priv_old}" "${_juce_a11y_priv_new}" _juce_a11y_h_src "${_juce_a11y_h_src}")
+        if (NOT _juce_a11y_h_src MATCHES "T3K_A11Y_PUBLIC_ACTIVE")
+            message(FATAL_ERROR
+                "T3K_A11Y_PUBLIC_ACTIVE: failed to patch ${_juce_a11y_h}. "
+                "The JUCE source layout likely changed in this version.")
+        endif()
+        file(WRITE "${_juce_a11y_h}" "${_juce_a11y_h_src}")
+        message(STATUS "Patched JUCE Accessibility: areAnyAccessibilityClientsActive() made public")
+    endif()
+endif()
+
 # Download GoogleTest Framework using CPM
 CPMAddPackage(
     NAME GOOGLETEST
