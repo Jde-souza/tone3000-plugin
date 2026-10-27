@@ -856,9 +856,20 @@ static bool t3kRaiseUiaNotification (const String& text, AccessibilityHandler::A
             if (auto* h = c->getAccessibilityHandler())
                 return h;
 
+        std::function<AccessibilityHandler*(Component&)> findH = [&findH](Component& comp) -> AccessibilityHandler*
+        {
+            if (auto* h = comp.getAccessibilityHandler())
+                return h;
+            for (int i = 0; i < comp.getNumChildComponents(); ++i)
+                if (auto* child = comp.getChildComponent (i))
+                    if (auto* h = findH (*child))
+                        return h;
+            return nullptr;
+        };
+
         for (int i = ComponentPeer::getNumPeers(); --i >= 0;)
             if (auto* peer = ComponentPeer::getPeer (i))
-                if (auto* h = peer->getComponent().getAccessibilityHandler())
+                if (auto* h = findH (peer->getComponent()))
                     return h;
 
         return nullptr;
